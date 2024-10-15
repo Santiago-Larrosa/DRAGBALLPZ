@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import math
 import pygame
-
+import time
 # COSO DE LOS SONIDOS QUE NO SE SI FUNCIONA
 pygame.mixer.init()
 
@@ -122,6 +122,9 @@ def superponer_imagen(fondo, imagen, x, y):
 sonido_reproduciendo = False
 sonido_ki_reproduciendo = False
 sonido_kamehameha_reproduciendo = False
+kamehameha_activado = False
+tiempo_inicio = 0
+tiempo_transcurrido = 0
 try:
     while True:
         ret, frame = cap.read()
@@ -217,20 +220,30 @@ try:
                             # MANO JUNTA LLAMAR
                         if manos_juntas(mano_izquierda.landmark[mp_hands.HandLandmark.WRIST], mano_derecha.landmark[mp_hands.HandLandmark.WRIST]):
                             kamehameha_detectado = True
-                            mensaje += "KAMEHAMEHA"
+                            mensaje += ""
                                 # PONELE CUMBIA (KAMEHAMEHA)
                             if not sonido_kamehameha_reproduciendo:
                                 kamehameha_sound.play()
                                 sonido_kamehameha_reproduciendo = True
+
+                            if not kamehameha_activado:
+                                tiempo_inicio = time.time()  # Captura el tiempo de inicio
+                                kamehameha_activado = True
 
 
                                 # LA IMAGEN SE MUEVE CON LA MUÑECA (NO VA A SER CON LA CHOT*, NO?)
                             h, w, _ = frame.shape
                             muñeca_x = int(muñeca_derecha.x * w)  # X MUÑECA (DERECHA PORQUE YO NUNCA VOY A LA IZQUIERDA VLLC)
                             muñeca_y = int(muñeca_derecha.y * h)  # LO MUSMO PERO Y
+                            if tiempo_transcurrido < 7:
+                                # Ajustar y centrar la imagen
+                                Tamanox = int(450 + (tiempo_transcurrido ** 1.5) * 10)
+                                Tamanoy = int(600 + (tiempo_transcurrido ** 1.5) * 10)
+                            else:
+                                Tamanox = int(450 + (7 ** 1.5) * 10)
+                                Tamanoy = int(600 + (7** 1.5) * 10)
 
-                                    # AJUSTAR IMAGEN (PERO EN ENGLISH)
-                            kamehameha_image_resized = cv2.resize(kamehameha_image, (450, 600))  
+                            kamehameha_image_resized = cv2.resize(kamehameha_image, (Tamanox, Tamanoy)) 
 
                                     # CENTRAR IMAGEN (COMO LOS CENTROS DE ADVINCULA)
                                 
@@ -245,6 +258,7 @@ try:
                             if sonido_kamehameha_reproduciendo:
                                 kamehameha_sound.stop()
                                 sonido_kamehameha_reproduciendo = False
+                                kamehameha_activado = False 
 
         # COMPROBAR SI ESTA CAGANDO KI... NO!... EHH... CARGANDO KI... ESO ERA.. JEJE
              
@@ -276,7 +290,10 @@ try:
             if sonido_ki_reproduciendo:
                 ki_sound.stop()
                 sonido_ki_reproduciendo = False
-
+        
+        if kamehameha_detectado:
+            tiempo_transcurrido = time.time() - tiempo_inicio
+            mensaje += f" Tiempo activo: {int(tiempo_transcurrido)}s"
 
 
         # PONER EL MENSAJINHO
